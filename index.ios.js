@@ -7,6 +7,8 @@
 var React = require('react-native');
 var {
   AppRegistry,
+  Image,
+  LinkingIOS,
   StyleSheet,
   Text,
   TextInput,
@@ -17,10 +19,12 @@ var {
 var ProductInStock = React.createClass({
   propTypes: {
     product: React.PropTypes.object,
+    productUrl: React.PropTypes.string,
   },
   getDefaultProps() {
     return {
       product: null,
+      productUrl: '',
     };
   },
 
@@ -34,18 +38,24 @@ var ProductInStock = React.createClass({
   },
 
   buyNow() {
-
+    LinkingIOS.openURL(this.props.productUrl);
   },
 
   render() {
     if(this.inStock()) {
       return (
-        <TouchableHighlight
-          style={styles.button}
-          onPress={this.buyNow}
-          >
-          <Text style={styles.buttonText}>BUY NOW</Text>
-        </TouchableHighlight>
+        <View style={styles.buyNowBox}>
+          <Text>It is!</Text>
+          <Image
+            source={{uri: this.props.product.image.src}}
+            style={styles.thumbnail} />
+          <TouchableHighlight
+            style={styles.button}
+            onPress={this.buyNow}
+            >
+            <Text style={styles.buttonText}>BUY NOW</Text>
+          </TouchableHighlight>
+        </View>
         );
     } else {
       return <Text>No :(</Text>;
@@ -56,13 +66,13 @@ var ProductInStock = React.createClass({
 var InStockYet = React.createClass({
   getInitialState() {
     return {
-      text: 'https://realer-dogs.sello.com/products/teapot.json',
+      productUrl: 'https://realer-dogs.sello.com/products/teapot',
       productJson: null,
     };
   },
 
   onCheckProductPressed() {
-    var productUrl = this.state.text;
+    var productUrl = this.state.productUrl;
     if(this.validUrl(productUrl)) {
       this.checkIfProductIsIn(productUrl);
     }
@@ -73,7 +83,7 @@ var InStockYet = React.createClass({
   },
 
   checkIfProductIsIn(productUrl) {
-    fetch(productUrl)
+    fetch(productUrl + '.json')
       .then((response) => response.json())
       .then((responseData) => {
         this.setState({
@@ -94,8 +104,8 @@ var InStockYet = React.createClass({
            autoFocus={true}
            placeholder="eg: http://myshop.com/product-handle"
            textAlign="center"
-           onChangeText={(text) => this.setState({text})}
-           value={this.state.text}
+           onChangeText={(productUrl) => this.setState({productUrl})}
+           value={this.state.productUrl}
            clearButtonMode="always"
           />
         <TouchableHighlight
@@ -104,19 +114,26 @@ var InStockYet = React.createClass({
           >
           <Text style={styles.buttonText}>Is it?</Text>
         </TouchableHighlight>
-        <ProductInStock product={this.state.productJson} />
+        <ProductInStock
+        product={this.state.productJson}
+        productUrl={this.state.productUrl} />
       </View>
     );
   },
 });
 
 var styles = StyleSheet.create({
+  buyNowBox: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'stretch',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F5FCFF',
-    margin: 24,
+    padding: 24,
   },
   title: {
     fontSize: 40,
@@ -132,6 +149,7 @@ var styles = StyleSheet.create({
     borderColor: '#48BBEC',
     borderWidth: 1,
     borderRadius: 8,
+    marginTop: 10,
     marginBottom: 10,
     alignSelf: 'stretch',
     justifyContent: 'center',
@@ -140,6 +158,11 @@ var styles = StyleSheet.create({
     fontSize: 18,
     color: 'white',
     alignSelf: 'center',
+  },
+  thumbnail: {
+    height: 100,
+    width: 100,
+    padding: 10,
   },
 });
 
