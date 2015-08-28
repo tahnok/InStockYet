@@ -28,7 +28,7 @@ var ProductInStock = React.createClass({
   },
 
   buyNow() {
-    LinkingIOS.openURL(this.props.product.productUrl);
+    LinkingIOS.openURL(this.props.product.cartUrl());
   },
 
   render() {
@@ -60,7 +60,7 @@ var ProductInStock = React.createClass({
 var InStockYet = React.createClass({
   getInitialState() {
     return {
-      productUrl: 'https://realer-dogs.sello.com/products/teapot',
+      productUrl: null,
       product: null,
     };
   },
@@ -72,7 +72,7 @@ var InStockYet = React.createClass({
   _loadInitialState() {
     AsyncStorage.getItem(PRODUCT_URL_KEY)
       .then((productUrl) => {
-        if(productUrl !==null) {
+        if(productUrl !== null) {
           this.setState({productUrl});
         }});
   },

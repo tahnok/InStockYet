@@ -16,6 +16,11 @@ class product {
     }
     return inStock;
   }
+
+  cartUrl() {
+    var url = new URL(this.productUrl);
+    return `${url.origin}/cart/${this.product.variants[0].id}:1`;
+  }
 }
 
 function isValid(productUrl) {
