@@ -4,9 +4,12 @@
  */
 'use strict';
 
+var Product = require('./App/Product');
+
 var React = require('react-native');
 var {
   AppRegistry,
+  AlertIOS,
   Image,
   LinkingIOS,
   StyleSheet,
@@ -19,12 +22,10 @@ var {
 var ProductInStock = React.createClass({
   propTypes: {
     product: React.PropTypes.object,
-    productUrl: React.PropTypes.string,
   },
   getDefaultProps() {
     return {
       product: null,
-      productUrl: '',
     };
   },
 
@@ -33,12 +34,12 @@ var ProductInStock = React.createClass({
     if(product === null) {
       return false;
     } else {
-      return product.variants[0].inventory_quantity > 0;
+      return product.inStock();
     }
   },
 
   buyNow() {
-    LinkingIOS.openURL(this.props.productUrl);
+    LinkingIOS.openURL(this.props.product.productUrl);
   },
 
   render() {
@@ -47,7 +48,7 @@ var ProductInStock = React.createClass({
         <View style={styles.buyNowBox}>
           <Text>It is!</Text>
           <Image
-            source={{uri: this.props.product.image.src}}
+            source={{uri: this.props.product.product.image.src}}
             style={styles.thumbnail} />
           <TouchableHighlight
             style={styles.button}
@@ -67,30 +68,19 @@ var InStockYet = React.createClass({
   getInitialState() {
     return {
       productUrl: 'https://realer-dogs.sello.com/products/teapot',
-      productJson: null,
+      product: null,
     };
   },
 
   onCheckProductPressed() {
     var productUrl = this.state.productUrl;
-    if(this.validUrl(productUrl)) {
-      this.checkIfProductIsIn(productUrl);
+    if(Product.isValid(productUrl)) {
+      Product.get(productUrl)
+        .then((product) => this.setState({product}))
+        .done();
+    } else {
+      AlertIOS.alert('Nope', 'Invalid URL, plz try again');
     }
-  },
-
-  validUrl(productUrl) {
-    return !!productUrl;
-  },
-
-  checkIfProductIsIn(productUrl) {
-    fetch(productUrl + '.json')
-      .then((response) => response.json())
-      .then((responseData) => {
-        this.setState({
-          productJson: responseData.product,
-        });
-      })
-      .done();
   },
 
   render() {
@@ -115,8 +105,7 @@ var InStockYet = React.createClass({
           <Text style={styles.buttonText}>Is it?</Text>
         </TouchableHighlight>
         <ProductInStock
-        product={this.state.productJson}
-        productUrl={this.state.productUrl} />
+        product={this.state.product} />
       </View>
     );
   },
