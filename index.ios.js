@@ -1,14 +1,10 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- */
 'use strict';
 
 var Product = require('./App/Product');
-
 var React = require('react-native');
 var {
   AppRegistry,
+  AsyncStorage,
   AlertIOS,
   Image,
   LinkingIOS,
@@ -18,6 +14,8 @@ var {
   TouchableHighlight,
   View,
 } = React;
+
+var PRODUCT_URL_KEY = '@ProductUrl:key';
 
 var ProductInStock = React.createClass({
   propTypes: {
@@ -29,37 +27,32 @@ var ProductInStock = React.createClass({
     };
   },
 
-  inStock() {
-    var product = this.props.product;
-    if(product === null) {
-      return false;
-    } else {
-      return product.inStock();
-    }
-  },
-
   buyNow() {
     LinkingIOS.openURL(this.props.product.productUrl);
   },
 
   render() {
-    if(this.inStock()) {
-      return (
-        <View style={styles.buyNowBox}>
+    if(this.props.product === null) {
+      return (<Text>DUNO YET</Text>);
+    } else {
+      if(this.props.product.inStock()) {
+        return (
+          <View style={styles.buyNowBox}>
           <Text>It is!</Text>
           <Image
             source={{uri: this.props.product.product.image.src}}
-            style={styles.thumbnail} />
+            style={styles.thumbnail}
+            />
           <TouchableHighlight
             style={styles.button}
             onPress={this.buyNow}
             >
-            <Text style={styles.buttonText}>BUY NOW</Text>
-          </TouchableHighlight>
-        </View>
-        );
-    } else {
-      return <Text>No :(</Text>;
+              <Text style={styles.buttonText}>CONSUME</Text>
+            </TouchableHighlight>
+          </View> );
+      } else {
+        return <Text>No :(</Text>;
+      }
     }
   },
 });
@@ -72,11 +65,26 @@ var InStockYet = React.createClass({
     };
   },
 
+  componentDidMount() {
+    this._loadInitialState();
+  },
+
+  _loadInitialState() {
+    AsyncStorage.getItem(PRODUCT_URL_KEY)
+      .then((productUrl) => {
+        if(productUrl !==null) {
+          this.setState({productUrl});
+        }});
+  },
+
   onCheckProductPressed() {
     var productUrl = this.state.productUrl;
     if(Product.isValid(productUrl)) {
+      AsyncStorage.setItem(PRODUCT_URL_KEY, productUrl);
       Product.get(productUrl)
         .then((product) => this.setState({product}))
+        .then(() => AsyncStorage.setItem(PRODUCT_URL_KEY, productUrl))
+        .catch(() => AlertIOS.alert('Nope', 'resource not found'))
         .done();
     } else {
       AlertIOS.alert('Nope', 'Invalid URL, plz try again');
